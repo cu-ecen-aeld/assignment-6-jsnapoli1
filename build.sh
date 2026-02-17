@@ -15,22 +15,27 @@ cat conf/local.conf | grep "${CONFLINE}" > /dev/null
 local_conf_info=$?
 
 if [ $local_conf_info -ne 0 ];then
-	echo "Append ${CONFLINE} in the local.conf file"
-	echo ${CONFLINE} >> conf/local.conf
-	
+    echo "Append ${CONFLINE} in the local.conf file"
+    echo ${CONFLINE} >> conf/local.conf
 else
-	echo "${CONFLINE} already exists in the local.conf file"
+    echo "${CONFLINE} already exists in the local.conf file"
 fi
 
+# Use shared cache directories if available (mounted at /yocto-shared in Docker)
+if [ -d "/yocto-shared" ]; then
+    echo "Using shared cache at /yocto-shared"
+    grep -q 'DL_DIR' conf/local.conf || echo 'DL_DIR = "/yocto-shared/downloads"' >> conf/local.conf
+    grep -q 'SSTATE_DIR' conf/local.conf || echo 'SSTATE_DIR = "/yocto-shared/sstate-cache"' >> conf/local.conf
+fi
 
 bitbake-layers show-layers | grep "meta-aesd" > /dev/null
 layer_info=$?
 
 if [ $layer_info -ne 0 ];then
-	echo "Adding meta-aesd layer"
-	bitbake-layers add-layer ../meta-aesd
+    echo "Adding meta-aesd layer"
+    bitbake-layers add-layer ../meta-aesd
 else
-	echo "meta-aesd layer already exists"
+    echo "meta-aesd layer already exists"
 fi
 
 set -e

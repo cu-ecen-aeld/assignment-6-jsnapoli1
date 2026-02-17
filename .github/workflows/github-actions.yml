@@ -20,7 +20,13 @@ jobs:
           - name: Run build
             timeout-minutes: 600
             run: |
-               docker run --rm                  -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE}                  cuaesd/aesd-autotest:24-assignment6-yocto                  --workdir=${GITHUB_WORKSPACE}                  ./build.sh
+               mkdir -p /home/eva/yocto-shared/downloads /home/eva/yocto-shared/sstate-cache
+               docker run --rm \
+                 -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
+                 -v /home/eva/yocto-shared:/yocto-shared \
+                 cuaesd/aesd-autotest:24-assignment6-yocto \
+                 --workdir=${GITHUB_WORKSPACE} \
+                 ./build.sh
           - name: Cleanup
             if: always()
             run: |
@@ -28,4 +34,8 @@ jobs:
           - name: Run full test
             timeout-minutes: 15
             run: |
-               docker run --rm                  -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE}                  cuaesd/aesd-autotest:assignment6-yocto                  --workdir=${GITHUB_WORKSPACE}                  ./full-test.sh
+               docker run --rm \
+                 -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
+                 cuaesd/aesd-autotest:assignment6-yocto \
+                 --workdir=${GITHUB_WORKSPACE} \
+                 ./full-test.sh
