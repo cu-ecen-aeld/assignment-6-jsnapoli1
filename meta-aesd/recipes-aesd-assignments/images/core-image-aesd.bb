@@ -1,5 +1,7 @@
 inherit core-image
-#CORE_IMAGE_EXTRA_INSTALL += "aesd-assignments"
+# Pseudocode: Include aesd-assignments package (aesdsocket daemon + init script) in the image.
+CORE_IMAGE_EXTRA_INSTALL += "aesd-assignments"
+# openssh allows SSH login to the QEMU target for debugging and running full-test.sh remotely.
 CORE_IMAGE_EXTRA_INSTALL += "openssh"
 inherit extrausers
 # See https://docs.yoctoproject.org/singleindex.html#extrausers-bbclass

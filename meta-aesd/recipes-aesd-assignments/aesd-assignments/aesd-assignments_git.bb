@@ -2,41 +2,54 @@
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
-# TODO: Set this  with the path to your assignments rep.  Use ssh protocol and see lecture notes
-# about how to setup ssh-agent for passwordless access
-# SRC_URI = "git://git@github.com/cu-ecen-aeld/<your assignments repo>;protocol=ssh;branch=master"
+# Pseudocode: Set SRC_URI to the public assignments-3-and-later repo using https protocol.
+# Using https avoids the need for SSH key configuration in the Yocto build environment.
+# The branch is master where Assignment 6 Part 1 was implemented.
+SRC_URI = "git://github.com/cu-ecen-aeld/assignments-3-and-later-jsnapoli1.git;protocol=https;branch=master"
 
 PV = "1.0+git${SRCPV}"
-# TODO: set to reference a specific commit hash in your assignment repo
-#SRCREV = "f99b82a5d4cb2a22810104f89d4126f52f4dfaba"
+# Pseudocode: Pin to the exact commit of the Part 1 implementation for reproducibility.
+# Yocto requires a fixed SRCREV — floating HEAD ("AUTOINC") is not allowed for production.
+SRCREV = "faa59dd95473a46b4901f6ea56adac884509bbcb"
 
-# This sets your staging directory based on WORKDIR, where WORKDIR is defined at 
-# https://docs.yoctoproject.org/ref-manual/variables.html?highlight=workdir#term-WORKDIR
-# We reference the "server" directory here to build from the "server" directory
-# in your assignments repo
+# S points to the "server" directory inside the fetched repo, where aesdsocket.c lives.
 S = "${WORKDIR}/git/server"
 
-# TODO: Add the aesdsocket application and any other files you need to install
-# See https://git.yoctoproject.org/poky/plain/meta/conf/bitbake.conf?h=kirkstone
-#FILES:${PN} += "${bindir}/aesdsocket"
-# TODO: customize these as necessary for any libraries you need for your application
-# (and remove comment)
-#TARGET_LDFLAGS += "-pthread -lrt"
+# Pseudocode: Tell the linker to include pthreads library.
+# aesdsocket uses pthread_create/join/mutex — the cross-toolchain needs this flag explicitly.
+TARGET_LDFLAGS += "-pthread -lrt"
+
+# Pseudocode: Declare all files installed into the rootfs so Yocto can package them.
+# ${bindir} = /usr/bin, ${sysconfdir} = /etc
+FILES:${PN} += "${bindir}/aesdsocket"
+FILES:${PN} += "${sysconfdir}/init.d/S99aesdsocket"
 
 do_configure () {
+	# No autoconf/cmake — Makefile-based project, nothing to configure.
 	:
 }
 
 do_compile () {
+	# Pseudocode: Run the project Makefile using Yocto's cross-compile wrapper.
+	# oe_runmake sets CC, CFLAGS, LDFLAGS from the Yocto toolchain automatically.
 	oe_runmake
 }
 
 do_install () {
-	# TODO: Install your binaries/scripts here.
-	# Be sure to install the target directory with install -d first
-	# Yocto variables ${D} and ${S} are useful here, which you can read about at 
-	# https://docs.yoctoproject.org/ref-manual/variables.html?highlight=workdir#term-D
-	# and
-	# https://docs.yoctoproject.org/ref-manual/variables.html?highlight=workdir#term-S
-	# See example at https://github.com/cu-ecen-aeld/ecen5013-yocto/blob/ecen5013-hello-world/meta-ecen5013/recipes-ecen5013/ecen5013-hello-world/ecen5013-hello-world_git.bb
+	# Pseudocode: Install aesdsocket binary to /usr/bin in the rootfs staging area.
+	# ${D} is the destination directory (staging rootfs), ${bindir} resolves to /usr/bin.
+	install -d ${D}${bindir}
+	install -m 0755 ${S}/aesdsocket ${D}${bindir}/aesdsocket
+
+	# Pseudocode: Install the init script to /etc/init.d so it runs at boot.
+	# The S99 prefix ensures this starts after most other init services (higher number = later).
+	# start-stop-daemon -d flag starts the daemon in background mode.
+	install -d ${D}${sysconfdir}/init.d
+	install -m 0755 ${S}/aesdsocket-start-stop ${D}${sysconfdir}/init.d/S99aesdsocket
 }
+
+# Pseudocode: Register the init script with the update-rc.d class for proper symlink creation.
+# This causes Yocto to call update-rc.d which creates /etc/rc*.d/ symlinks at image creation time.
+inherit update-rc.d
+INITSCRIPT_NAME = "S99aesdsocket"
+INITSCRIPT_PARAMS = "start 99 2 3 4 5 . stop 20 0 1 6 ."
