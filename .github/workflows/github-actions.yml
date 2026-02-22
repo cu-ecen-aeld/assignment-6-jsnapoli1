@@ -20,10 +20,10 @@ jobs:
           - name: Run build
             timeout-minutes: 600
             run: |
-               mkdir -p /home/eva/yocto-shared/downloads /home/eva/yocto-shared/sstate-cache
+               mkdir -p $HOME/yocto-shared/downloads $HOME/yocto-shared/sstate-cache
                docker run --rm \
                  -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
-                 -v /home/eva/yocto-shared:/yocto-shared \
+                 -v $HOME/yocto-shared:/yocto-shared \
                  cuaesd/aesd-autotest:24-assignment6-yocto \
                  --workdir=${GITHUB_WORKSPACE} \
                  ./build.sh
