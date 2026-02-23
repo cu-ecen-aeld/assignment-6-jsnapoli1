@@ -67,3 +67,6 @@ The built image should include `openssh` and start `aesdsocket` via `/etc/init.d
 ## CI Notes
 
 The GitHub Actions workflow runs the build inside `cuaesd/aesd-autotest:24-assignment6-yocto` and mounts a shared cache directory to reduce repeated download/build costs.
+
+## Codex Link:
+https://chatgpt.com/s/cd_699bb34f528481918d4a9243a4e7037b
